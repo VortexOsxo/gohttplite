@@ -7,7 +7,7 @@ import (
 )
 
 type Request struct {
-	Method  string
+	Method  Verb
 	Path    string
 	Headers map[string]string
 	Body    string
@@ -62,5 +62,5 @@ func GetRequest(conn net.Conn) Request {
 		body = request[bodyStart+4:]
 	}
 
-	return Request{Method: method, Path: path, Headers: headers, Body: body}
+	return Request{Method: Verb(method), Path: path, Headers: headers, Body: body}
 }

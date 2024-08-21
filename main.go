@@ -8,8 +8,12 @@ import (
 func main() {
 	server := s.CreateServer("localhost:8080")
 
-	server.AddHandler(s.CreateHandler("/api", func(request messages.Request) messages.Response {
-		return messages.CreateResponse()
+	server.AddHandler("/lol", s.CreateHandler(messages.POST, func(request messages.Request) messages.Response {
+		return messages.Response{
+			Body: "HTTP/1.1 200 OK\r\n" + "Content-Type: text/plain\r\n" + "\r\n" + "Hello, World! from lol",
+		}
 	}))
+
 	server.Start()
+
 }
