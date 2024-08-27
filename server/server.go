@@ -18,7 +18,7 @@ func CreateServer(address string) *Server {
 
 	server.routing_tree = &RoutingTree{}
 
-	server.default_handler = CreateHandler(messages.Verb(""), "", func(request messages.Request) messages.Response {
+	server.default_handler = CreateHandler(messages.Verb(""), func(request messages.Request) messages.Response {
 		return messages.Response{Body: "HTTP/1.1 404 Not Found\r\n" + "Content-Type: text/plain\r\n" + "\r\n" + "Not Found"}
 	})
 
