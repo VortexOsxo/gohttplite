@@ -41,7 +41,7 @@ func (rt *RoutingTree) findRoute(route string, currentNode *RoutingTreeNode) *Ro
 	}
 
 	for _, children := range currentNode.childrens {
-		if children.route == route {
+		if children.AcceptRoute(route) {
 			return children
 		}
 	}

@@ -13,3 +13,10 @@ func CreateRoutingTreeNode(route string) *RoutingTreeNode {
 		childrens: make([]*RoutingTreeNode, 0),
 	}
 }
+
+func (node *RoutingTreeNode) AcceptRoute(route string) bool {
+	if node.route == "*" {
+		return true
+	}
+	return node.route == route
+}
