@@ -6,9 +6,14 @@ import (
 
 type Handler struct {
 	method  messages.Verb
+	path    string
 	handler func(messages.Request) messages.Response
 }
 
-func CreateHandler(verb messages.Verb, handler func(messages.Request) messages.Response) Handler {
-	return Handler{method: verb, handler: handler}
+func (h *Handler) Handle(request messages.Request) messages.Response {
+	return h.handler(request)
+}
+
+func CreateHandler(verb messages.Verb, path string, handler func(messages.Request) messages.Response) Handler {
+	return Handler{method: verb, path: path, handler: handler}
 }

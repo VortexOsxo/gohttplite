@@ -3,39 +3,38 @@ package server
 import (
 	"fmt"
 	"gohttplite/messages"
-	"gohttplite/server/routing_tree"
 	"log"
 	"net"
 )
 
 type Server struct {
 	address         string
-	routing_tree    *routing_tree.RoutingTree
-	default_handler func(messages.Request) messages.Response
+	routing_tree    *RoutingTree
+	default_handler Handler
 }
 
 func CreateServer(address string) *Server {
 	server := &Server{address: address}
 
-	server.routing_tree = &routing_tree.RoutingTree{}
+	server.routing_tree = &RoutingTree{}
 
-	server.default_handler = func(request messages.Request) messages.Response {
+	server.default_handler = CreateHandler(messages.Verb(""), "", func(request messages.Request) messages.Response {
 		return messages.Response{Body: "HTTP/1.1 404 Not Found\r\n" + "Content-Type: text/plain\r\n" + "\r\n" + "Not Found"}
-	}
+	})
 
 	return server
 }
 
 func (server *Server) AddHandler(path string, handler Handler) {
-	server.routing_tree.AddRoute(path, &handler.handler)
+	server.routing_tree.AddHandler(path, &handler)
 }
 
-func (server *Server) findHandler(path string) func(messages.Request) messages.Response {
-	handler := server.routing_tree.FindRoute(path)
+func (server *Server) findHandler(method messages.Verb, path string) *Handler {
+	handler := server.routing_tree.FindHandler(method, path)
 	if handler == nil {
-		return server.default_handler
+		return &server.default_handler
 	}
-	return *handler
+	return handler
 }
 
 func (server *Server) Start() {
@@ -65,9 +64,9 @@ func (server *Server) handleConnection(conn net.Conn) {
 	fmt.Println("Path ffs:")
 	fmt.Println(request.Path)
 
-	handler := server.findHandler(request.Path)
+	handler := server.findHandler(request.Method, request.Path)
 
-	response := handler(request)
+	response := (*handler).Handle(request)
 	writeResponse(conn, response)
 }
 
