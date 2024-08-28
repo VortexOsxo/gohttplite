@@ -25,7 +25,7 @@ func (rt *RoutingTree) addHandler(currentNode *RoutingTreeNode, path string, han
 		return
 	}
 
-	nextNode := rt.findRoute(route, currentNode)
+	nextNode := currentNode.findRoute(route, messages.Request{})
 
 	if nextNode == nil {
 		nextNode = CreateRoutingTreeNode(route)
@@ -35,44 +35,8 @@ func (rt *RoutingTree) addHandler(currentNode *RoutingTreeNode, path string, han
 	rt.addHandler(nextNode, remainingPath, handler)
 }
 
-func (rt *RoutingTree) findRoute(route string, currentNode *RoutingTreeNode) *RoutingTreeNode {
-	if currentNode == nil {
-		return nil
-	}
-
-	for _, children := range currentNode.childrens {
-		if children.AcceptRoute(route) {
-			return children
-		}
-	}
-
-	return nil
-}
-
-func (rt *RoutingTree) FindHandler(method messages.Verb, path string) *Handler {
-	return rt.findHandler(rt.root, method, path)
-}
-
-func (rt RoutingTree) findHandler(currentNode *RoutingTreeNode, method messages.Verb, path string) *Handler {
-	if currentNode == nil {
-		return nil
-	}
-
-	route, remainingPath := getRouteFromPath(path)
-
-	if route == "" {
-		for _, handler := range currentNode.handlers {
-			if handler.method == method {
-				return handler
-			}
-		}
-
-		return nil
-	}
-
-	nextNode := rt.findRoute(route, currentNode)
-
-	return rt.findHandler(nextNode, method, remainingPath)
+func (rt *RoutingTree) FindHandler(request messages.Request) *Handler {
+	return rt.root.findHandler(request)
 }
 
 func getRouteFromPath(path string) (string, string) {

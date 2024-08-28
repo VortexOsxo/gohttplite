@@ -1,7 +1,6 @@
 package messages
 
 import (
-	"fmt"
 	"net"
 	"strings"
 )
@@ -10,6 +9,7 @@ type Request struct {
 	Method  Verb
 	Path    string
 	Headers map[string]string
+	Args    map[string]string
 	Body    string
 }
 
@@ -33,7 +33,6 @@ func GetRequest(conn net.Conn) Request {
 	lines := strings.Split(request, "\n")
 
 	for index, line := range lines {
-		fmt.Println(line)
 		if line == "\r" || line == "" {
 			break
 		}

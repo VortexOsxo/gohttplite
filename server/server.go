@@ -29,8 +29,8 @@ func (server *Server) AddHandler(path string, handler Handler) {
 	server.routing_tree.AddHandler(path, &handler)
 }
 
-func (server *Server) findHandler(method messages.Verb, path string) *Handler {
-	handler := server.routing_tree.FindHandler(method, path)
+func (server *Server) findHandler(request messages.Request) *Handler {
+	handler := server.routing_tree.FindHandler(request)
 	if handler == nil {
 		return &server.default_handler
 	}
@@ -64,7 +64,7 @@ func (server *Server) handleConnection(conn net.Conn) {
 	fmt.Println("Path ffs:")
 	fmt.Println(request.Path)
 
-	handler := server.findHandler(request.Method, request.Path)
+	handler := server.findHandler(request)
 
 	response := (*handler).Handle(request)
 	writeResponse(conn, response)

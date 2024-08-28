@@ -1,5 +1,7 @@
 package server
 
+import "gohttplite/messages"
+
 type RoutingTreeNode struct {
 	route     string
 	handlers  []*Handler
@@ -14,9 +16,52 @@ func CreateRoutingTreeNode(route string) *RoutingTreeNode {
 	}
 }
 
-func (node *RoutingTreeNode) AcceptRoute(route string) bool {
+func (node *RoutingTreeNode) acceptRoute(route string, request messages.Request) bool {
 	if node.route == "*" {
 		return true
 	}
+
+	if node.route[0] == ':' {
+		request.Args[node.route[1:]] = route
+		return true
+	}
+
 	return node.route == route
+}
+
+func (node *RoutingTreeNode) findRoute(route string, request messages.Request) *RoutingTreeNode {
+	if node == nil {
+		return nil
+	}
+
+	for _, children := range node.childrens {
+		if children.acceptRoute(route, request) {
+			return children
+		}
+	}
+
+	return nil
+}
+
+func (currentNode *RoutingTreeNode) findHandler(request messages.Request) *Handler {
+	if currentNode == nil {
+		return nil
+	}
+
+	route, remainingPath := getRouteFromPath(request.Path)
+
+	if route == "" {
+		for _, handler := range currentNode.handlers {
+			if handler.method == request.Method {
+				return handler
+			}
+		}
+
+		return nil
+	}
+
+	nextNode := currentNode.findRoute(route, request)
+
+	request.Path = remainingPath
+	return nextNode.findHandler(request)
 }
