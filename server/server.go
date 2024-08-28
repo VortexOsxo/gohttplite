@@ -18,14 +18,15 @@ func CreateServer(address string) *Server {
 
 	server.routing_tree = &RoutingTree{}
 
-	server.default_handler = CreateHandler(messages.Verb(""), func(request messages.Request) messages.Response {
-		return messages.Response{Body: "HTTP/1.1 404 Not Found\r\n" + "Content-Type: text/plain\r\n" + "\r\n" + "Not Found"}
+	server.default_handler = CreateHandler(messages.Verb(""), func(request messages.Request, response messages.Response) messages.Response {
+		return messages.Response{StatusCode: messages.NOT_FOUND, Body: "Not Found"}
 	})
 
 	return server
 }
 
-func (server *Server) AddHandler(path string, handler Handler) {
+func (server *Server) AddHandler(path string, method messages.Verb, handler_func func(messages.Request, messages.Response) messages.Response) {
+	handler := CreateHandler(method, handler_func)
 	server.routing_tree.AddHandler(path, &handler)
 }
 
@@ -66,12 +67,12 @@ func (server *Server) handleConnection(conn net.Conn) {
 
 	handler := server.findHandler(request)
 
-	response := (*handler).Handle(request)
+	response := (*handler).Handle(request, messages.Response{})
 	writeResponse(conn, response)
 }
 
 func writeResponse(conn net.Conn, response messages.Response) {
-	_, err := conn.Write([]byte(response.Body))
+	_, err := conn.Write([]byte(response.ToString()))
 	if err != nil {
 		log.Println("Error writing:", err)
 	}

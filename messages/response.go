@@ -1,11 +1,16 @@
 package messages
 
+import "fmt"
+
 type Response struct {
-	Body string
+	StatusCode StatusCode
+	Body       string
 }
 
-func CreateResponse() Response {
-	return Response{
-		Body: "HTTP/1.1 200 OK\r\n" + "Content-Type: text/plain\r\n" + "\r\n" + "Hello, World!",
-	}
+func (response *Response) SetStatusCode(statusCode StatusCode) {
+	response.StatusCode = statusCode
+}
+
+func (response *Response) ToString() string {
+	return fmt.Sprintf("HTTP/1.1 %d %s\r\n"+"Content-Type: text/plain\r\n"+"\r\n"+response.Body, response.StatusCode, response.StatusCode.ToString())
 }
