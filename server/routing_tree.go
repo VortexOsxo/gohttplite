@@ -14,25 +14,7 @@ func (rt *RoutingTree) AddHandler(path string, handler *Handler) {
 		rt.root = CreateRoutingTreeNode("")
 	}
 
-	rt.addHandler(rt.root, path, handler)
-}
-
-func (rt *RoutingTree) addHandler(currentNode *RoutingTreeNode, path string, handler *Handler) {
-	route, remainingPath := getRouteFromPath(path)
-
-	if route == "" {
-		currentNode.handlers = append(currentNode.handlers, handler)
-		return
-	}
-
-	nextNode := currentNode.findRoute(route, messages.Request{})
-
-	if nextNode == nil {
-		nextNode = CreateRoutingTreeNode(route)
-		currentNode.childrens = append(currentNode.childrens, nextNode)
-	}
-
-	rt.addHandler(nextNode, remainingPath, handler)
+	rt.root.addHandler(path, handler)
 }
 
 func (rt *RoutingTree) FindHandler(request messages.Request) *Handler {

@@ -29,6 +29,24 @@ func (node *RoutingTreeNode) acceptRoute(route string, request messages.Request)
 	return node.route == route
 }
 
+func (node *RoutingTreeNode) addHandler(path string, handler *Handler) {
+	route, remainingPath := getRouteFromPath(path)
+
+	if route == "" {
+		node.handlers = append(node.handlers, handler)
+		return
+	}
+
+	nextNode := node.findRoute(route, messages.Request{})
+
+	if nextNode == nil {
+		nextNode = CreateRoutingTreeNode(route)
+		node.childrens = append(node.childrens, nextNode)
+	}
+
+	nextNode.addHandler(remainingPath, handler)
+}
+
 func (node *RoutingTreeNode) findRoute(route string, request messages.Request) *RoutingTreeNode {
 	if node == nil {
 		return nil
