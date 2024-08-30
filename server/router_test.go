@@ -120,24 +120,30 @@ func TestRoutingTreeArgumentMultiple(t *testing.T) {
 
 }
 
-func TestGetRouteFromPath(t *testing.T) {
-	testCases := []struct {
-		input          string
-		expectedRoute  string
-		expectedRemain string
-	}{
-		{"/users", "users", ""},
-		{"/users/profile", "users", "/profile"},
-		{"users/profile/", "users", "/profile"},
-		{"/", "", ""},
-		{"", "", ""},
+func TestRoutingRouter(t *testing.T) {
+	server := &Router{}
+
+	rt := &Router{}
+
+	handler1 := &Handler{method: messages.GET}
+	handler2 := &Handler{method: messages.GET}
+
+	rt.AddHandler("/users", handler1)
+	rt.AddHandler("/users/:id", handler2)
+
+	server.AddRouter("/api", rt)
+
+	request1 := CreateEmptyRequest(messages.GET, "/api/users")
+	if found := server.FindHandler(request1); found != handler1 {
+		t.Errorf("Expected to find handler1 for GET /users")
 	}
 
-	for _, tc := range testCases {
-		route, remain := getRouteFromPath(tc.input)
-		if route != tc.expectedRoute || remain != tc.expectedRemain {
-			t.Errorf("For input %s, expected (%s, %s) but got (%s, %s)",
-				tc.input, tc.expectedRoute, tc.expectedRemain, route, remain)
-		}
+	request2 := CreateEmptyRequest(messages.GET, "/api/users/123")
+	if found := server.FindHandler(request2); found != handler1 {
+		t.Errorf("Expected to find handler1 for GET /users/123")
+	}
+
+	if request1.Args["id"] != "123" {
+		t.Errorf("Expected path param id to be 123, got %s", request1.Args["id"])
 	}
 }

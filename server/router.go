@@ -13,9 +13,9 @@ func (rt *Router) AddHandler(path string, handler *Handler) {
 	rt.root.addNode(path, CreateTreeLeaf(handler))
 }
 
-func (rt *Router) AddRouter(router *Router) {
+func (rt *Router) AddRouter(path string, router *Router) {
 	rt.ensureRootExists()
-	rt.root.addNode(router.root.route, router.root)
+	rt.root.addNode(path, router.root)
 }
 
 func (rt *Router) FindHandler(request messages.Request) *Handler {

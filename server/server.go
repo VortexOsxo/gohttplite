@@ -49,8 +49,8 @@ func (server *Server) AddHandler(path string, method messages.Verb, handler_func
 	server.router.AddHandler(path, &handler)
 }
 
-func (server *Server) AddRouter(router *Router) {
-	server.router.AddRouter(router)
+func (server *Server) AddRouter(path string, router *Router) {
+	server.router.AddRouter(path, router)
 }
 
 func (server *Server) findHandler(request messages.Request) *Handler {
