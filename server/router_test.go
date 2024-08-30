@@ -10,7 +10,7 @@ func CreateEmptyRequest(method messages.Verb, path string) messages.Request {
 }
 
 func TestRoutingTreeDefault(t *testing.T) {
-	rt := &RoutingTree{}
+	rt := &Router{}
 
 	handler1 := &Handler{method: messages.GET}
 	handler2 := &Handler{method: messages.POST}
@@ -46,7 +46,7 @@ func TestRoutingTreeDefault(t *testing.T) {
 }
 
 func TestRoutingTreeAny(t *testing.T) {
-	rt := &RoutingTree{}
+	rt := &Router{}
 
 	handler1 := &Handler{method: messages.GET}
 	handler2 := &Handler{method: messages.GET}
@@ -78,7 +78,7 @@ func TestRoutingTreeAny(t *testing.T) {
 }
 
 func TestRoutingTreeArgumentSimple(t *testing.T) {
-	rt := &RoutingTree{}
+	rt := &Router{}
 
 	handler1 := &Handler{method: messages.GET}
 
@@ -95,7 +95,7 @@ func TestRoutingTreeArgumentSimple(t *testing.T) {
 }
 
 func TestRoutingTreeArgumentMultiple(t *testing.T) {
-	rt := &RoutingTree{}
+	rt := &Router{}
 
 	handler1 := &Handler{method: messages.GET}
 

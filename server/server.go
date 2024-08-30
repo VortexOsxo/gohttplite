@@ -9,33 +9,20 @@ import (
 
 type Server struct {
 	address         string
-	routing_tree    *RoutingTree
+	router          *Router
 	default_handler Handler
 }
 
 func CreateServer(address string) *Server {
 	server := &Server{address: address}
 
-	server.routing_tree = &RoutingTree{}
+	server.router = &Router{}
 
 	server.default_handler = CreateHandler(messages.Verb(""), func(request messages.Request, response messages.Response) messages.Response {
 		return messages.Response{StatusCode: messages.NOT_FOUND, Body: "Not Found"}
 	})
 
 	return server
-}
-
-func (server *Server) AddHandler(path string, method messages.Verb, handler_func func(messages.Request, messages.Response) messages.Response) {
-	handler := CreateHandler(method, handler_func)
-	server.routing_tree.AddHandler(path, &handler)
-}
-
-func (server *Server) findHandler(request messages.Request) *Handler {
-	handler := server.routing_tree.FindHandler(request)
-	if handler == nil {
-		return &server.default_handler
-	}
-	return handler
 }
 
 func (server *Server) Start() {
@@ -55,6 +42,23 @@ func (server *Server) Start() {
 		}
 		go server.handleConnection(conn)
 	}
+}
+
+func (server *Server) AddHandler(path string, method messages.Verb, handler_func func(messages.Request, messages.Response) messages.Response) {
+	handler := CreateHandler(method, handler_func)
+	server.router.AddHandler(path, &handler)
+}
+
+func (server *Server) AddRouter(router *Router) {
+	server.router.AddRouter(router)
+}
+
+func (server *Server) findHandler(request messages.Request) *Handler {
+	handler := server.router.FindHandler(request)
+	if handler == nil {
+		return &server.default_handler
+	}
+	return handler
 }
 
 func (server *Server) handleConnection(conn net.Conn) {
