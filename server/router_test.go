@@ -140,10 +140,26 @@ func TestRoutingRouter(t *testing.T) {
 
 	request2 := CreateEmptyRequest(messages.GET, "/api/users/123")
 	if found := server.FindHandler(request2); found != handler2 {
-		t.Errorf("Expected to find handler1 for GET /users/123")
+		t.Errorf("Expected to find handler2 for GET /users/123")
 	}
 
 	if request2.Args["id"] != "123" {
 		t.Errorf("Expected path param id to be 123, got %s", request2.Args["id"])
 	}
+}
+
+func TestRoutingCollision(t *testing.T) {
+	router := &Router{}
+
+	handler1 := &Handler{method: messages.GET}
+	handler2 := &Handler{method: messages.GET}
+
+	router.AddHandler("users/:id", handler1)
+	router.AddHandler("users/profil", handler2)
+
+	request := CreateEmptyRequest(messages.GET, "users/profil")
+	if found := router.FindHandler(request); found != handler2 {
+		t.Errorf("There is a collision when using variable in a route")
+	}
+
 }
