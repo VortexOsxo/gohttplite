@@ -8,14 +8,20 @@ type Router struct {
 	root *RoutingNode
 }
 
+func CreateRouter(route string) *Router {
+	return &Router{
+		root: CreateTreeNode(simplifyPath(route)),
+	}
+}
+
 func (rt *Router) AddHandler(path string, handler *Handler) {
 	rt.ensureRootExists()
 	rt.root.addNode(path, CreateTreeLeaf(handler))
 }
 
-func (rt *Router) AddRouter(path string, router *Router) {
+func (rt *Router) AddRouter(router *Router) {
 	rt.ensureRootExists()
-	rt.root.addNode(path, router.root)
+	rt.root.addNode("", router.root)
 }
 
 func (rt *Router) FindHandler(request messages.Request) *Handler {

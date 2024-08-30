@@ -61,5 +61,5 @@ func GetRequest(conn net.Conn) Request {
 		body = request[bodyStart+4:]
 	}
 
-	return Request{Method: Verb(method), Path: path, Headers: headers, Body: body}
+	return Request{Method: Verb(method), Path: path, Headers: headers, Args: make(map[string]string), Body: body}
 }

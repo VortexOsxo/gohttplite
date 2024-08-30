@@ -123,7 +123,7 @@ func TestRoutingTreeArgumentMultiple(t *testing.T) {
 func TestRoutingRouter(t *testing.T) {
 	server := &Router{}
 
-	rt := &Router{}
+	rt := CreateRouter("/api")
 
 	handler1 := &Handler{method: messages.GET}
 	handler2 := &Handler{method: messages.GET}
@@ -131,7 +131,7 @@ func TestRoutingRouter(t *testing.T) {
 	rt.AddHandler("/users", handler1)
 	rt.AddHandler("/users/:id", handler2)
 
-	server.AddRouter("/api", rt)
+	server.AddRouter(rt)
 
 	request1 := CreateEmptyRequest(messages.GET, "/api/users")
 	if found := server.FindHandler(request1); found != handler1 {
@@ -139,11 +139,11 @@ func TestRoutingRouter(t *testing.T) {
 	}
 
 	request2 := CreateEmptyRequest(messages.GET, "/api/users/123")
-	if found := server.FindHandler(request2); found != handler1 {
+	if found := server.FindHandler(request2); found != handler2 {
 		t.Errorf("Expected to find handler1 for GET /users/123")
 	}
 
-	if request1.Args["id"] != "123" {
-		t.Errorf("Expected path param id to be 123, got %s", request1.Args["id"])
+	if request2.Args["id"] != "123" {
+		t.Errorf("Expected path param id to be 123, got %s", request2.Args["id"])
 	}
 }
