@@ -26,7 +26,7 @@ func CreateTreeLeaf(handler *Handler) *RoutingNode {
 
 func (node *RoutingNode) acceptRoute(route string, request messages.Request) bool {
 	if node.route == "" {
-		return true
+		return false
 	}
 
 	if node.route == "*" {
