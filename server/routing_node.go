@@ -27,13 +27,9 @@ func CreateTreeLeaf(handler *Handler) *RoutingNode {
 func (node *RoutingNode) acceptRoute(route string, request messages.Request) bool {
 	if node.route == "" {
 		return false
-	}
-
-	if node.route == "*" {
+	} else if node.route == "*" {
 		return true
-	}
-
-	if node.route[0] == ':' {
+	} else if node.route[0] == ':' {
 		request.Args[node.route[1:]] = route
 		return true
 	}
@@ -42,11 +38,7 @@ func (node *RoutingNode) acceptRoute(route string, request messages.Request) boo
 }
 
 func (node *RoutingNode) acceptMethod(method messages.Verb) bool {
-	if node.handler != nil && node.handler.method == method {
-		return true
-	}
-
-	return false
+	return node.handler != nil && node.handler.method == method
 }
 
 func (node *RoutingNode) addNode(path string, newNode *RoutingNode) {
