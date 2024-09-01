@@ -64,7 +64,7 @@ func TestRoutingTreeAny(t *testing.T) {
 		t.Errorf("Expected to find handler3 for GET /drugs/delete")
 	}
 
-	if found := rt.FindHandler(CreateEmptyRequest(messages.GET, "/users/profile")); found != handler1 {
+	if found := rt.FindHandler(CreateEmptyRequest(messages.GET, "/users/profile")); found != handler2 {
 		t.Errorf("Expected to find handler2 for GET /users/profile")
 	}
 

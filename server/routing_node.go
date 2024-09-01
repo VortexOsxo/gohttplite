@@ -5,14 +5,14 @@ import "gohttplite/messages"
 type RoutingNode struct {
 	route     string
 	handler   *Handler
-	childrens []*RoutingNode
+	childrens NodeContainer
 }
 
 func CreateTreeNode(route string) *RoutingNode {
 	return &RoutingNode{
 		route:     route,
 		handler:   nil,
-		childrens: make([]*RoutingNode, 0),
+		childrens: CreateNodeContainer(),
 	}
 }
 
@@ -20,7 +20,7 @@ func CreateTreeLeaf(handler *Handler) *RoutingNode {
 	return &RoutingNode{
 		route:     "",
 		handler:   handler,
-		childrens: make([]*RoutingNode, 0),
+		childrens: CreateNodeContainer(),
 	}
 }
 
@@ -49,7 +49,7 @@ func (node *RoutingNode) addNode(path string, newNode *RoutingNode) {
 	route, remainingPath := getRouteFromPath(path)
 
 	if route == "" {
-		node.childrens = append(node.childrens, newNode)
+		node.childrens.addNode(newNode)
 		return
 	}
 
@@ -57,7 +57,7 @@ func (node *RoutingNode) addNode(path string, newNode *RoutingNode) {
 
 	if nextNode == nil {
 		nextNode = CreateTreeNode(route)
-		node.childrens = append(node.childrens, nextNode)
+		node.childrens.addNode(nextNode)
 	}
 
 	nextNode.addNode(remainingPath, newNode)
@@ -68,7 +68,7 @@ func (node *RoutingNode) findNodeByRoute(route string) *RoutingNode {
 		return nil
 	}
 
-	for _, children := range node.childrens {
+	for _, children := range node.childrens.getNodes() {
 		if children.isRouteEqual(route) {
 			return children
 		}
@@ -83,7 +83,7 @@ func (node *RoutingNode) findNodeByRouteOld(route string, request messages.Reque
 		return nil
 	}
 
-	for _, children := range node.childrens {
+	for _, children := range node.childrens.getNodes() {
 		if children.acceptRoute(route, request) {
 			return children
 		}
@@ -100,7 +100,7 @@ func (node *RoutingNode) findHandler(request messages.Request) *Handler {
 	route, remainingPath := getRouteFromPath(request.Path)
 
 	if route == "" {
-		for _, children := range node.childrens {
+		for _, children := range node.childrens.getNodes() {
 			if children.acceptMethod(request.Method) {
 				return children.handler
 			}
