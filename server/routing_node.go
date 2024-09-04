@@ -49,35 +49,9 @@ func (node *RoutingNode) isRouteEqual(route string) bool {
 }
 
 func (node *RoutingNode) addNode(path string, newNode *RoutingNode) {
-	route, remainingPath := getRouteFromPath(path)
+	nodesPath := node.createNodePath(path, []*RoutingNode{node})
 
-	if route == "" {
-		node.childrens.addNode(newNode)
-		return
-	}
-
-	nextNode := node.findNodeByRoute(route)
-
-	if nextNode == nil {
-		nextNode = CreateTreeNode(route)
-		node.childrens.addNode(nextNode)
-	}
-
-	nextNode.addNode(remainingPath, newNode)
-}
-
-func (node *RoutingNode) findNodeByRoute(route string) *RoutingNode {
-	if node == nil {
-		return nil
-	}
-
-	for _, children := range node.childrens.getNodes() {
-		if children.isRouteEqual(route) {
-			return children
-		}
-	}
-
-	return nil
+	nodesPath[len(nodesPath)-1].childrens.addNode(newNode)
 }
 
 func (node *RoutingNode) createNodePath(path string, nodes []*RoutingNode) []*RoutingNode {
@@ -96,7 +70,21 @@ func (node *RoutingNode) createNodePath(path string, nodes []*RoutingNode) []*Ro
 
 	nodes = append(nodes, nextNode)
 
-	return node.createNodePath(remainingPath, nodes)
+	return nextNode.createNodePath(remainingPath, nodes)
+}
+
+func (node *RoutingNode) findNodeByRoute(route string) *RoutingNode {
+	if node == nil {
+		return nil
+	}
+
+	for _, children := range node.childrens.getNodes() {
+		if children.isRouteEqual(route) {
+			return children
+		}
+	}
+
+	return nil
 }
 
 // TODO: Divide finding a node and accepting a request
