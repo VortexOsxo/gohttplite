@@ -3,24 +3,27 @@ package server
 import "gohttplite/messages"
 
 type RoutingNode struct {
-	route     string
-	handler   *Handler
-	childrens NodeContainer
+	route      string
+	middleware []Middleware
+	handler    *Handler
+	childrens  NodeContainer
 }
 
 func CreateTreeNode(route string) *RoutingNode {
 	return &RoutingNode{
-		route:     route,
-		handler:   nil,
-		childrens: CreateNodeContainer(),
+		route:      route,
+		middleware: make([]Middleware, 0),
+		handler:    nil,
+		childrens:  CreateNodeContainer(),
 	}
 }
 
 func CreateTreeLeaf(handler *Handler) *RoutingNode {
 	return &RoutingNode{
-		route:     "",
-		handler:   handler,
-		childrens: CreateNodeContainer(),
+		route:      "",
+		middleware: make([]Middleware, 0),
+		handler:    handler,
+		childrens:  CreateNodeContainer(),
 	}
 }
 
@@ -75,6 +78,25 @@ func (node *RoutingNode) findNodeByRoute(route string) *RoutingNode {
 	}
 
 	return nil
+}
+
+func (node *RoutingNode) createNodePath(path string, nodes []*RoutingNode) []*RoutingNode {
+	route, remainingPath := getRouteFromPath(path)
+
+	if route == "" {
+		return nodes
+	}
+
+	nextNode := node.findNodeByRoute(route)
+
+	if nextNode == nil {
+		nextNode = CreateTreeNode(route)
+		node.childrens.addNode(nextNode)
+	}
+
+	nodes = append(nodes, nextNode)
+
+	return node.createNodePath(remainingPath, nodes)
 }
 
 // TODO: Divide finding a node and accepting a request
