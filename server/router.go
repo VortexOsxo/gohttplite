@@ -4,14 +4,14 @@ import (
 	"gohttplite/messages"
 )
 
-type Router struct {
-	root *RoutingNode
-}
-
 func CreateRouter(route string) *Router {
 	return &Router{
 		root: CreateTreeNode(simplifyPath(route)),
 	}
+}
+
+type Router struct {
+	root *RoutingNode
 }
 
 func (rt *Router) AddRouter(router *Router) {
@@ -28,21 +28,17 @@ func (rt *Router) AddHandler(path string, handler *Handler) {
 	rt.root.addNode(path, CreateTreeLeaf(handler))
 }
 
-func (rt *Router) findHandler(request messages.Request) *Handler {
-	return rt.root.findHandler(request)
-}
-
 func (rt *Router) handleRequest(request messages.Request) messages.Response {
 	nodesPath, err := rt.root.findHandlingPath(request, []*RoutingNode{rt.root})
 
 	if err != nil {
-		return default_handler.handler(request, messages.Response{})
+		return server_error_handler.Handle(request, messages.Response{})
 	}
 
 	decomposedPath := decomposePath(request.Path, true)
 
 	if len(nodesPath) == 0 {
-		return default_handler.handler(request, messages.Response{})
+		return not_found_handler.Handle(request, messages.Response{})
 	}
 
 	for index, value := range nodesPath {

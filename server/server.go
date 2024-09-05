@@ -7,16 +7,13 @@ import (
 	"net"
 )
 
+func CreateServer(address string) *Server {
+	return &Server{address: address, router: &Router{}}
+}
+
 type Server struct {
 	address string
 	router  *Router
-}
-
-func CreateServer(address string) *Server {
-	server := &Server{address: address}
-
-	server.router = &Router{}
-	return server
 }
 
 func (server *Server) Start() {
@@ -26,7 +23,6 @@ func (server *Server) Start() {
 	}
 
 	defer listener.Close()
-
 	fmt.Println("Server listening on", server.address)
 
 	for {
@@ -47,15 +43,11 @@ func (server *Server) AddRouter(router *Router) {
 	server.router.AddRouter(router)
 }
 
-func (server *Server) handleRequest(request messages.Request) messages.Response {
-	return server.router.handleRequest(request)
-}
-
 func (server *Server) handleConnection(conn net.Conn) {
 	defer conn.Close()
 
 	request := messages.GetRequest(conn)
-	response := server.handleRequest(request)
+	response := server.router.handleRequest(request)
 
 	writeResponse(conn, response)
 }
