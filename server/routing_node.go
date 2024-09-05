@@ -1,6 +1,9 @@
 package server
 
-import "gohttplite/messages"
+import (
+	"errors"
+	"gohttplite/messages"
+)
 
 type RoutingNode struct {
 	route      string
@@ -61,7 +64,7 @@ func (node *RoutingNode) createNodePath(path string, nodes []*RoutingNode) []*Ro
 		return nodes
 	}
 
-	nextNode := node.findNodeByRoute(route)
+	nextNode := node.findNodeEqualToRoute(route)
 
 	if nextNode == nil {
 		nextNode = CreateTreeNode(route)
@@ -73,11 +76,33 @@ func (node *RoutingNode) createNodePath(path string, nodes []*RoutingNode) []*Ro
 	return nextNode.createNodePath(remainingPath, nodes)
 }
 
-func (node *RoutingNode) findNodeByRoute(route string) *RoutingNode {
-	if node == nil {
-		return nil
+func (node *RoutingNode) findHandlingPath(request messages.Request, nodes []*RoutingNode) ([]*RoutingNode, error) {
+	route, remainingPath := getRouteFromPath(request.Path)
+
+	if route == "" {
+		for _, children := range node.childrens.getNodes() {
+			if children.acceptMethod(request.Method) {
+				nodes = append(nodes, children)
+				return nodes, nil
+			}
+		}
+
+		return nil, errors.New("path not found")
 	}
 
+	nextNode := node.findNodeToHandleRoute(route, request)
+
+	if nextNode == nil {
+		return nil, errors.New("path not found")
+	}
+
+	nodes = append(nodes, nextNode)
+
+	request.Path = remainingPath
+	return nextNode.findHandlingPath(request, nodes)
+}
+
+func (node *RoutingNode) findNodeEqualToRoute(route string) *RoutingNode {
 	for _, children := range node.childrens.getNodes() {
 		if children.isRouteEqual(route) {
 			return children
@@ -87,12 +112,7 @@ func (node *RoutingNode) findNodeByRoute(route string) *RoutingNode {
 	return nil
 }
 
-// TODO: Divide finding a node and accepting a request
-func (node *RoutingNode) findNodeByRouteOld(route string, request messages.Request) *RoutingNode {
-	if node == nil {
-		return nil
-	}
-
+func (node *RoutingNode) findNodeToHandleRoute(route string, request messages.Request) *RoutingNode {
 	for _, children := range node.childrens.getNodes() {
 		if children.acceptRoute(route, request) {
 			return children
@@ -103,24 +123,10 @@ func (node *RoutingNode) findNodeByRouteOld(route string, request messages.Reque
 }
 
 func (node *RoutingNode) findHandler(request messages.Request) *Handler {
-	if node == nil {
+	nodesPath, err := node.findHandlingPath(request, []*RoutingNode{node})
+	if err != nil {
 		return nil
 	}
 
-	route, remainingPath := getRouteFromPath(request.Path)
-
-	if route == "" {
-		for _, children := range node.childrens.getNodes() {
-			if children.acceptMethod(request.Method) {
-				return children.handler
-			}
-		}
-
-		return nil
-	}
-
-	nextNode := node.findNodeByRouteOld(route, request)
-
-	request.Path = remainingPath
-	return nextNode.findHandler(request)
+	return nodesPath[len(nodesPath)-1].handler
 }
