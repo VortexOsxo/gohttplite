@@ -30,25 +30,22 @@ func CreateTreeLeaf(handler *Handler) *RoutingNode {
 	}
 }
 
-func (node *RoutingNode) acceptRoute(route string, request messages.Request) bool {
-	if node.route == "" {
-		return false
-	} else if node.route == "*" {
-		return true
-	} else if node.route[0] == ':' {
-		request.Args[node.route[1:]] = route
-		return true
-	}
-
-	return node.route == route
-}
-
 func (node *RoutingNode) acceptMethod(method messages.Verb) bool {
 	return node.handler != nil && node.handler.method == method
 }
 
 func (node *RoutingNode) isRouteEqual(route string) bool {
 	return node.route == route
+}
+
+func (node *RoutingNode) isRouteHandleable(route string) bool {
+	return node.route == "*" || node.route[0] == ':' || node.route == route
+}
+
+func (node *RoutingNode) handleRequest(request messages.Request, route string) {
+	if len(node.route) > 0 && node.route[0] == ':' {
+		request.Args[node.route[1:]] = route
+	}
 }
 
 func (node *RoutingNode) addNode(path string, newNode *RoutingNode) {
@@ -90,7 +87,7 @@ func (node *RoutingNode) findHandlingPath(request messages.Request, nodes []*Rou
 		return nil, errors.New("path not found")
 	}
 
-	nextNode := node.findNodeToHandleRoute(route, request)
+	nextNode := node.findNodeToHandleRoute(route)
 
 	if nextNode == nil {
 		return nil, errors.New("path not found")
@@ -112,9 +109,9 @@ func (node *RoutingNode) findNodeEqualToRoute(route string) *RoutingNode {
 	return nil
 }
 
-func (node *RoutingNode) findNodeToHandleRoute(route string, request messages.Request) *RoutingNode {
+func (node *RoutingNode) findNodeToHandleRoute(route string) *RoutingNode {
 	for _, children := range node.childrens.getNodes() {
-		if children.acceptRoute(route, request) {
+		if children.isRouteHandleable(route) {
 			return children
 		}
 	}
@@ -126,6 +123,12 @@ func (node *RoutingNode) findHandler(request messages.Request) *Handler {
 	nodesPath, err := node.findHandlingPath(request, []*RoutingNode{node})
 	if err != nil {
 		return nil
+	}
+
+	decomposedPath := decomposePath(request.Path, true)
+
+	for index, value := range nodesPath {
+		value.handleRequest(request, decomposedPath[index])
 	}
 
 	return nodesPath[len(nodesPath)-1].handler

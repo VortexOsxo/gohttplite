@@ -27,3 +27,26 @@ func simplifyPath(path string) string {
 	}
 	return path
 }
+
+func decomposePath(path string, surroundWithEmptyString bool) []string {
+	path = simplifyPath(path)
+
+	decomposedPath := []string{}
+
+	if surroundWithEmptyString {
+		decomposedPath = append(decomposedPath, "")
+	}
+
+	route, remainingPath := getRouteFromPath(path)
+
+	for route != "" {
+		decomposedPath = append(decomposedPath, route)
+		route, remainingPath = getRouteFromPath(remainingPath)
+	}
+
+	if surroundWithEmptyString {
+		decomposedPath = append(decomposedPath, "")
+	}
+
+	return decomposedPath
+}

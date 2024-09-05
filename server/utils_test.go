@@ -23,3 +23,17 @@ func TestGetRouteFromPath(t *testing.T) {
 		}
 	}
 }
+
+func TestDecomposePath(t *testing.T) {
+	path := "/users/robert/profile"
+
+	decomposedPath := decomposePath(path, false)
+
+	if len(decomposedPath) != 3 {
+		t.Errorf("Decompose path returns a path of wrong size")
+	}
+
+	if decomposedPath[0] != "users" || decomposedPath[1] != "robert" || decomposedPath[2] != "profile" {
+		t.Errorf("Decompose path did not return the proper value in the path")
+	}
+}

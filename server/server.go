@@ -8,20 +8,14 @@ import (
 )
 
 type Server struct {
-	address         string
-	router          *Router
-	default_handler Handler
+	address string
+	router  *Router
 }
 
 func CreateServer(address string) *Server {
 	server := &Server{address: address}
 
 	server.router = &Router{}
-
-	server.default_handler = CreateHandler(messages.Verb(""), func(request messages.Request, response messages.Response) messages.Response {
-		return messages.Response{StatusCode: messages.NOT_FOUND, Body: "Not Found"}
-	})
-
 	return server
 }
 
@@ -53,25 +47,16 @@ func (server *Server) AddRouter(router *Router) {
 	server.router.AddRouter(router)
 }
 
-func (server *Server) findHandler(request messages.Request) *Handler {
-	handler := server.router.FindHandler(request)
-	if handler == nil {
-		return &server.default_handler
-	}
-	return handler
+func (server *Server) handleRequest(request messages.Request) messages.Response {
+	return server.router.handleRequest(request)
 }
 
 func (server *Server) handleConnection(conn net.Conn) {
 	defer conn.Close()
 
 	request := messages.GetRequest(conn)
+	response := server.handleRequest(request)
 
-	fmt.Println("Path ffs:")
-	fmt.Println(request.Path)
-
-	handler := server.findHandler(request)
-
-	response := (*handler).Handle(request, messages.Response{})
 	writeResponse(conn, response)
 }
 

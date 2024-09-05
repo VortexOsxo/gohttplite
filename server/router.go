@@ -28,8 +28,29 @@ func (rt *Router) AddHandler(path string, handler *Handler) {
 	rt.root.addNode(path, CreateTreeLeaf(handler))
 }
 
-func (rt *Router) FindHandler(request messages.Request) *Handler {
+func (rt *Router) findHandler(request messages.Request) *Handler {
 	return rt.root.findHandler(request)
+}
+
+func (rt *Router) handleRequest(request messages.Request) messages.Response {
+	nodesPath, err := rt.root.findHandlingPath(request, []*RoutingNode{rt.root})
+
+	if err != nil {
+		return default_handler.handler(request, messages.Response{})
+	}
+
+	decomposedPath := decomposePath(request.Path, true)
+
+	if len(nodesPath) == 0 {
+		return default_handler.handler(request, messages.Response{})
+	}
+
+	for index, value := range nodesPath {
+		value.handleRequest(request, decomposedPath[index])
+	}
+
+	handler := nodesPath[len(nodesPath)-1].handler
+	return handler.Handle(request, messages.Response{})
 }
 
 func (rt *Router) ensureRootExists() {
