@@ -12,7 +12,7 @@ def send_request_to_server(route):
         print(f"An error occurred: {e}")
 
 if __name__ == "__main__":
-    send_request_to_server('lol')
-    send_request_to_server('unknown')
+    send_request_to_server('api/users/123')
+    send_request_to_server('api/unknown')
 
 

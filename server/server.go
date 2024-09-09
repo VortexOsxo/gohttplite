@@ -7,34 +7,13 @@ import (
 	"net"
 )
 
-type Server struct {
-	address         string
-	routing_tree    *RoutingTree
-	default_handler Handler
-}
-
 func CreateServer(address string) *Server {
-	server := &Server{address: address}
-
-	server.routing_tree = &RoutingTree{}
-
-	server.default_handler = CreateHandler(messages.Verb(""), func(request messages.Request) messages.Response {
-		return messages.Response{Body: "HTTP/1.1 404 Not Found\r\n" + "Content-Type: text/plain\r\n" + "\r\n" + "Not Found"}
-	})
-
-	return server
+	return &Server{address: address, router: &Router{}}
 }
 
-func (server *Server) AddHandler(path string, handler Handler) {
-	server.routing_tree.AddHandler(path, &handler)
-}
-
-func (server *Server) findHandler(method messages.Verb, path string) *Handler {
-	handler := server.routing_tree.FindHandler(method, path)
-	if handler == nil {
-		return &server.default_handler
-	}
-	return handler
+type Server struct {
+	address string
+	router  *Router
 }
 
 func (server *Server) Start() {
@@ -44,7 +23,6 @@ func (server *Server) Start() {
 	}
 
 	defer listener.Close()
-
 	fmt.Println("Server listening on", server.address)
 
 	for {
@@ -56,22 +34,26 @@ func (server *Server) Start() {
 	}
 }
 
+func (server *Server) AddHandler(path string, method messages.Verb, handler_func func(messages.Request, messages.Response) messages.Response) {
+	handler := CreateHandler(method, handler_func)
+	server.router.AddHandler(path, &handler)
+}
+
+func (server *Server) AddRouter(router *Router) {
+	server.router.AddRouter(router)
+}
+
 func (server *Server) handleConnection(conn net.Conn) {
 	defer conn.Close()
 
 	request := messages.GetRequest(conn)
+	response := server.router.handleRequest(request)
 
-	fmt.Println("Path ffs:")
-	fmt.Println(request.Path)
-
-	handler := server.findHandler(request.Method, request.Path)
-
-	response := (*handler).Handle(request)
 	writeResponse(conn, response)
 }
 
 func writeResponse(conn net.Conn, response messages.Response) {
-	_, err := conn.Write([]byte(response.Body))
+	_, err := conn.Write([]byte(response.ToString()))
 	if err != nil {
 		log.Println("Error writing:", err)
 	}
