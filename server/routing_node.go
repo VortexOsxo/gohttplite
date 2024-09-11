@@ -6,18 +6,18 @@ import (
 )
 
 func CreateTreeNode(route string) *RoutingNode {
-	return &RoutingNode{route: route, middleware: make([]Middleware, 0), handler: nil, childrens: CreateNodeContainer()}
+	return &RoutingNode{route: route, middlewares: make([]*Middleware, 0), handler: nil, childrens: CreateNodeContainer()}
 }
 
 func CreateTreeLeaf(handler *Handler) *RoutingNode {
-	return &RoutingNode{route: "", middleware: make([]Middleware, 0), handler: handler, childrens: CreateNodeContainer()}
+	return &RoutingNode{route: "", middlewares: make([]*Middleware, 0), handler: handler, childrens: CreateNodeContainer()}
 }
 
 type RoutingNode struct {
-	route      string
-	middleware []Middleware
-	handler    *Handler
-	childrens  NodeContainer
+	route       string
+	middlewares []*Middleware
+	handler     *Handler
+	childrens   NodeContainer
 }
 
 func isRouteEqual(node *RoutingNode, route string) bool {
@@ -32,16 +32,26 @@ func (node *RoutingNode) canHandleRequest(request messages.Request) bool {
 	return node.handler != nil && node.handler.method == request.Method
 }
 
-func (node *RoutingNode) handleRequest(request messages.Request, route string) {
+func (node *RoutingNode) createHandlingChain(currentMiddleware *Middleware, request messages.Request, route string) *Middleware {
 	if len(node.route) > 0 && node.route[0] == ':' {
 		request.Args[node.route[1:]] = route
 	}
+	for _, middleware := range node.middlewares {
+		currentMiddleware.next = middleware
+		currentMiddleware = middleware
+	}
+
+	return currentMiddleware
 }
 
 func (node *RoutingNode) addNode(path string, newNode *RoutingNode) {
-	nodesPath := node.createNodePath(path, []*RoutingNode{node})
+	lastNode := node.getLastNodeOfPath(path, []*RoutingNode{node})
+	lastNode.childrens.addNode(newNode)
+}
 
-	nodesPath[len(nodesPath)-1].childrens.addNode(newNode)
+func (node *RoutingNode) addMiddleware(path string, newMiddleware *Middleware) {
+	lastNode := node.getLastNodeOfPath(path, []*RoutingNode{node})
+	lastNode.middlewares = append(lastNode.middlewares, newMiddleware)
 }
 
 func (node *RoutingNode) createNodePath(path string, nodes []*RoutingNode) []*RoutingNode {
@@ -58,6 +68,11 @@ func (node *RoutingNode) createNodePath(path string, nodes []*RoutingNode) []*Ro
 
 	nodes = append(nodes, nextNode)
 	return nextNode.createNodePath(remainingPath, nodes)
+}
+
+func (node *RoutingNode) getLastNodeOfPath(path string, nodes []*RoutingNode) *RoutingNode {
+	nodesPath := node.createNodePath(path, nodes)
+	return nodesPath[len(nodesPath)-1]
 }
 
 func (node *RoutingNode) findHandlingPath(request messages.Request, nodes []*RoutingNode) ([]*RoutingNode, error) {
