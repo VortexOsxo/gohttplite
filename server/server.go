@@ -36,7 +36,7 @@ func (server *Server) Start() {
 
 func (server *Server) AddHandler(path string, method messages.Verb, handler_func func(messages.Request, messages.Response) messages.Response) {
 	handler := CreateHandler(method, handler_func)
-	server.router.AddHandler(path, &handler)
+	server.router.AddHandler(path, handler)
 }
 
 func (server *Server) AddRouter(router *Router) {

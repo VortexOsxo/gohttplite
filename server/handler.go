@@ -4,8 +4,8 @@ import (
 	"gohttplite/messages"
 )
 
-func CreateHandler(verb messages.Verb, handler func(messages.Request, messages.Response) messages.Response) Handler {
-	return Handler{method: verb, handler: handler}
+func CreateHandler(verb messages.Verb, handler func(messages.Request, messages.Response) messages.Response) *Handler {
+	return &Handler{method: verb, handler: handler}
 }
 
 type Handler struct {
