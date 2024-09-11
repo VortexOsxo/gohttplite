@@ -11,25 +11,27 @@ type Response struct {
 	contentType string
 }
 
-func (response *Response) SetStatusCode(statusCode StatusCode) {
+func (response *Response) SetStatusCode(statusCode StatusCode) *Response {
 	response.StatusCode = statusCode
+	return response
 }
 
-func (response *Response) SetMessage(message string) {
+func (response *Response) SetMessage(message string) *Response {
 	response.Body = message
 	response.contentType = "text/plain"
+	return response
 }
 
-func (response *Response) SetJson(object any) error {
+func (response *Response) SetJson(object any) (*Response, error) {
 	jsonData, err := json.Marshal(object)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	response.Body = string(jsonData)
 	response.contentType = "application/json"
 
-	return nil
+	return response, nil
 }
 
 func (response *Response) ToString() string {
