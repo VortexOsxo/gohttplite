@@ -34,7 +34,7 @@ func (server *Server) Start() {
 	}
 }
 
-func (server *Server) AddHandler(path string, method messages.Verb, handler_func func(messages.Request, messages.Response) messages.Response) {
+func (server *Server) AddHandler(path string, method messages.Verb, handler_func HandlerFunc) {
 	handler := CreateHandler(method, handler_func)
 	server.router.AddHandler(path, handler)
 }
@@ -47,9 +47,9 @@ func (server *Server) handleConnection(conn net.Conn) {
 	defer conn.Close()
 
 	request := messages.GetRequest(conn)
-	response := server.router.handleRequest(request)
+	response := server.router.handleRequest(&request)
 
-	writeResponse(conn, response)
+	writeResponse(conn, *response)
 }
 
 func writeResponse(conn net.Conn, response messages.Response) {

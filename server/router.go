@@ -33,21 +33,21 @@ func (rt *Router) AddHandler(path string, handler *Handler) {
 	rt.root.addNode(path, CreateTreeLeaf(handler))
 }
 
-func (rt *Router) handleRequest(request messages.Request) messages.Response {
+func (rt *Router) handleRequest(request *messages.Request) *messages.Response {
 	nodesPath, err := rt.root.findHandlingPath(request, []*RoutingNode{rt.root})
 	handler := nodesPath[len(nodesPath)-1].handler
 
 	if err != nil {
-		return server_error_handler.Handle(request, messages.Response{})
+		return server_error_handler.Handle(request, &messages.Response{})
 	}
 
 	decomposedPath := decomposePath(request.Path, true)
 
 	if len(nodesPath) == 0 {
-		return not_found_handler.Handle(request, messages.Response{})
+		return not_found_handler.Handle(request, &messages.Response{})
 	}
 
-	emptyMiddleware := CreateMiddleWare(func(request messages.Request, response messages.Response, next *Middleware) messages.Response {
+	emptyMiddleware := CreateMiddleWare(func(request *messages.Request, response *messages.Response, next *Middleware) *messages.Response {
 		return next.Evaluate(request, response)
 	})
 
@@ -57,11 +57,11 @@ func (rt *Router) handleRequest(request messages.Request) messages.Response {
 		currentMiddleware = value.createHandlingChain(currentMiddleware, request, decomposedPath[index])
 	}
 
-	currentMiddleware.next = CreateMiddleWare(func(request messages.Request, response messages.Response, next *Middleware) messages.Response {
+	currentMiddleware.next = CreateMiddleWare(func(request *messages.Request, response *messages.Response, next *Middleware) *messages.Response {
 		return handler.Handle(request, response)
 	})
 
-	return emptyMiddleware.Evaluate(request, messages.Response{})
+	return emptyMiddleware.Evaluate(request, &messages.Response{})
 }
 
 func (rt *Router) ensureRootExists() {

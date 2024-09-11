@@ -28,11 +28,11 @@ func isRouteHandleable(node *RoutingNode, route string) bool {
 	return node.route == "*" || node.route[0] == ':' || node.route == route
 }
 
-func (node *RoutingNode) canHandleRequest(request messages.Request) bool {
+func (node *RoutingNode) canHandleRequest(request *messages.Request) bool {
 	return node.handler != nil && node.handler.method == request.Method
 }
 
-func (node *RoutingNode) createHandlingChain(currentMiddleware *Middleware, request messages.Request, route string) *Middleware {
+func (node *RoutingNode) createHandlingChain(currentMiddleware *Middleware, request *messages.Request, route string) *Middleware {
 	if len(node.route) > 0 && node.route[0] == ':' {
 		request.Args[node.route[1:]] = route
 	}
@@ -75,7 +75,7 @@ func (node *RoutingNode) getLastNodeOfPath(path string, nodes []*RoutingNode) *R
 	return nodesPath[len(nodesPath)-1]
 }
 
-func (node *RoutingNode) findHandlingPath(request messages.Request, nodes []*RoutingNode) ([]*RoutingNode, error) {
+func (node *RoutingNode) findHandlingPath(request *messages.Request, nodes []*RoutingNode) ([]*RoutingNode, error) {
 	route, remainingPath := getRouteFromPath(request.Path)
 
 	if route == "" {
