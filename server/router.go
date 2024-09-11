@@ -5,6 +5,10 @@ import (
 )
 
 func CreateRouter(route string) *Router {
+	route, remainingPath := getRouteFromPath(route)
+	if remainingPath != "" {
+		panic("Router must take in a simple path")
+	}
 	return &Router{
 		root: CreateTreeNode(simplifyPath(route)),
 	}
